@@ -55,10 +55,10 @@ path = maindir.joinpath("mount")
 notlocal = not(args.local)
 
 if path.is_mount() and notlocal:
-    print("-------Unmounting in case it is mounted---------")
+    print("--------Unmounting in case it is mounted--------")
     if subprocess.call(["fusermount","-u",path]) == 0:
         print("Done")
-    print("-------------------------------")
+    print("------------------------------------------------")
 
 if notlocal:
     if not maindir.exists():
