@@ -48,25 +48,50 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
                 jobstr = f"{job[0]},{job[1]}".encode()
                 sockobject.send(jobstr)
                 jobassigned.append(job)
-                print(f"Job {len(jobassigned)} of {len(joblist)} assigned.")
-                print(f"Job {len(jobdone)} of {len(joblist)} done.\n")
+                lastdone = len(jobdone)
+                lasttime = time.time()
+                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done")
+                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-3)}>]")
         elif "done" in received.decode():
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
             job = [received.decode().split(",")[1], received.decode().split(",")[2]]
             jobdone.append(job)
             job = givejobfunc(joblist, jobassigned)
+            deltatime = time.time() - lasttime
+            deltadone = len(jobdone) - lastdone
+            rate = deltatime/deltadone
+            etraw = rate * (len(joblist) - len(jobdone))
+            etparsed = format_seconds_to_hhmmss(etraw)
+            lasttime = time.time()
+            lastdone = len(jobdone)
             if job:
                 jobstr = f"{job[0]},{job[1]}".encode()
                 sockobject.send(jobstr)
                 jobassigned.append(job)
-                print(f"Job {len(jobassigned)} of {len(joblist)} assigned.")
-                print(f"Job {len(jobdone)} of {len(joblist)} done.\n")
-        elif "failed" in received.decode():
+                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done|ET={etparsed}")
+                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-3)}>]")
+       elif "failed" in received.decode():
             job = [received.decode().split(",")[1], received.decode().split(",")[2]]
             jobassigned.remove(job)
-            print(f"Job {job} failed. Removing from assigned job. You might want to check for error at client from {client}")
+            print(f"Job {job} failed. Removing from assigned job. You might want to check for error at client from {client}\n\n\n")
         lock.release()
     if not failed:
         sockobject.send(b"job done")
+
+def getTermSize():
+    rows, columns = os.popen("stty size","r").read().split()
+    size=[]
+    size.append(int(rows))
+    size.append(int(columns))
+    return size
+
+def format_seconds_to_hhmmss(seconds):
+    hours = seconds // (60*60)
+    seconds %= (60*60)
+    minutes = seconds // 60
+    seconds %= 60
+    return "%02i:%02i:%02i" % (hours, minutes, seconds)
 #---------------------------
 #-------Variable and initialisation-----
 framesplit = args.frame_split
@@ -93,7 +118,7 @@ try:
         clients.append((client, addr))
         client.send(f"{mltfilepath.name},{os.getlogin()},{mltfilepath.parent.as_posix()}".encode())
 except KeyboardInterrupt:
-    print("\n-----------------------------------")
+    print("\n-------------------------------")
     print("Stopped accepting connections. Initialising.")
     for i in clients:
         print(f"Pinging client{clients.index(i)} ......")
@@ -168,7 +193,7 @@ for i in clients:
         print(f"Client from {i[1]} raised error when uploading")
         input("Press Enter to continue (after fixing the error manually of course)...")
 
-print("\n---------Merging videos------------")
+print("\n---------Merging videos--------")
 #-------------Concatenate videos----------------
 videos = os.listdir(filetemp)
 writecontent = ""
