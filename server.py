@@ -1,4 +1,4 @@
-import socket, sys, subprocess, os, shutil, time, argparse
+import socket, sys, subprocess, os, shutil, time, argparse, re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from threading import Thread, Lock
@@ -51,7 +51,7 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
                 lastdone = len(jobdone)
                 lasttime = time.time()
                 print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done")
-                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-3)}>]")
+                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
         elif "done" in received.decode():
             print(f"\033[A{' '*getTermSize()[1]}\033[A")
             print(f"\033[A{' '*getTermSize()[1]}\033[A")
@@ -61,17 +61,17 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
             deltatime = time.time() - lasttime
             deltadone = len(jobdone) - lastdone
             rate = deltatime/deltadone
-            etraw = rate * (len(joblist) - len(jobdone))
-            etparsed = format_seconds_to_hhmmss(etraw)
+            etaraw = rate * (len(joblist) - len(jobdone))
+            etaparsed = format_seconds_to_hhmmss(etaraw)
             lasttime = time.time()
             lastdone = len(jobdone)
             if job:
                 jobstr = f"{job[0]},{job[1]}".encode()
                 sockobject.send(jobstr)
                 jobassigned.append(job)
-                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done|ET={etparsed}")
-                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-3)}>]")
-       elif "failed" in received.decode():
+                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done|ETA={etaparsed}")
+                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
+        elif "failed" in received.decode():
             job = [received.decode().split(",")[1], received.decode().split(",")[2]]
             jobassigned.remove(job)
             print(f"Job {job} failed. Removing from assigned job. You might want to check for error at client from {client}\n\n\n")
@@ -92,6 +92,13 @@ def format_seconds_to_hhmmss(seconds):
     minutes = seconds // 60
     seconds %= 60
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
+def alphaNumOrder(string):
+    """ Returns all numbers on 5 digits to let sort the  string with numeric order.
+    Ex: alphaNumOrder("a6b12.125")  ==> "a00006b00012.00125"
+    """
+    return ''.join([format(int(x), '05d') if x.isdigit()
+                   else x for x in re.split(r'(\d+)', string)])
 #---------------------------
 #-------Variable and initialisation-----
 framesplit = args.frame_split
@@ -145,6 +152,8 @@ for i in clients:
 print("-------------------------------")
 input("Press Enter to continue...")
 
+timestart = time.time()
+
 with open(mltfilepath, "r") as file:
     mltfilecontent = file.read()
 parsedmlt = ET.fromstring(mltfilecontent)
@@ -196,14 +205,17 @@ for i in clients:
 print("\n---------Merging videos--------")
 #-------------Concatenate videos----------------
 videos = os.listdir(filetemp)
+videos.sort(key=alphaNumOrder)
 writecontent = ""
 for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
 with open(filetemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", filetemp.joinpath("concat.txt"), "-c", "copy", "-map", "0:v", "-map", "0:a:0", outputfile])
+mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", filetemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", "-map", "0:a:0", outputfile])
 
 if mergecode == 0:
-    subprocess.call(["rm","client*.mlt"])
-    shutil.rmtree(filetemp)
+    subprocess.call(["rm " + mltfilepath.parent.joinpath("client*.mlt").as_posix()], shell = True)
+    #shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
+
+print(f"Time elapsed: {format_seconds_to_hhmmss(time.time()-timestart)}")

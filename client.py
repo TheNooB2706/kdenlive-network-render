@@ -105,7 +105,7 @@ jobreceived = []
 s.send(b"standby")
 while True:
     jobinout = s.recv(512).decode()
-    if jobinout != "job done":
+    if jobinout != "job done" and len(jobinout.split(",")) == 2:
         jobinout = jobinout.split(",")
         jobreceived.append(jobinout)
         modifymlt(path.joinpath(f"{clientid}.mlt"), jobinout[0], jobinout[1])
@@ -133,6 +133,8 @@ if received == "upload" and notlocal:
         s.send(b"error occurred")
         print("Error raised from last command.")
         input("Press Enter to continue...")
+if not notlocal:
+    s.send(b"done upload")
 
 print("Client job done! Exitting...")
 
