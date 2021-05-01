@@ -8,6 +8,7 @@ parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
 parser.add_argument("-d", "--program-dir", help = "Path where this program use to store temporary files and mountpoint. Default to ~/.kdenlive_network_render", default = "~/.kdenlive_network_render", type = Path)
 parser.add_argument("-l", "--local", help = "Start as local client where client and server are on the same machine.", action = "store_true")
+parser.add_argument("-t", "--threads", help = "Number of threads to use when rendering. This modifies the thread option in the .mlt file. Default to number of cpu cores.", default = os.cpu_count(), type=int)
 args = parser.parse_args()
 #------------Functions---------
 def modifymlt(mltfilepath, inf, outf):
@@ -17,7 +18,7 @@ def modifymlt(mltfilepath, inf, outf):
     fileformat = parsedmlt[1].attrib["f"]
     if parsedmlt.attrib["root"] != path.as_posix():
         parsedmlt.attrib["root"] = path.as_posix()
-        parsedmlt[1].attrib["threads"] = str(os.cpu_count())
+        parsedmlt[1].attrib["threads"] = str(args.threads)
     parsedmlt[1].attrib["target"] = tempfolder.joinpath(constructfilename(inf, outf, fileformat)).as_posix()
     parsedmlt[1].attrib["in"] = str(inf)
     parsedmlt[1].attrib["out"] = str(outf)
