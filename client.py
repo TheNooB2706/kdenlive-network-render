@@ -21,6 +21,8 @@ def modifymlt(mltfilepath, inf, outf):
     parsedmlt[1].attrib["target"] = tempfolder.joinpath(constructfilename(inf, outf, fileformat)).as_posix()
     parsedmlt[1].attrib["in"] = str(inf)
     parsedmlt[1].attrib["out"] = str(outf)
+    parsedmlt[1].attrib["an"] = "1"
+    parsedmlt[1].attrib["audio_off"] = "1"
     savemlt = ET.tostring(parsedmlt, encoding="unicode")
     with open(mltfilepath, "w") as file:
         file.write(savemlt)

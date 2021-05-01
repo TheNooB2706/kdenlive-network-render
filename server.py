@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("mltfile", help = "Path to generated MLT project file.", type = Path)
 parser.add_argument("-f", "--frame-split", help = "Set the number of frames to split into for each jobs. Default to 1000 frames.", type = int, default = 1000)
+parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
 args = parser.parse_args()
 
 #--------------Functions---------
@@ -99,6 +100,18 @@ def alphaNumOrder(string):
     """
     return ''.join([format(int(x), '05d') if x.isdigit()
                    else x for x in re.split(r'(\d+)', string)])
+
+def audioonlymlt(mltfilepath, filetemp):
+    with open(mltfilepath, "r") as file:
+        mltfilecontent = file.read()
+    parsedmlt = ET.fromstring(mltfilecontent)
+    vidformat = parsedmlt[1].attrib["f"]
+    parsedmlt[1].attrib["target"] = filetemp.joinpath(f"audio.{vidformat}").as_posix()
+    parsedmlt[1].attrib["vn"] = "1"
+    parsedmlt[1].attrib["video_off"] = "1"
+    savemlt = ET.tostring(parsedmlt, encoding="unicode")
+    with open(mltfilepath, "w") as file:
+        file.write(savemlt)
 #---------------------------
 #-------Variable and initialisation-----
 framesplit = args.frame_split
@@ -158,6 +171,7 @@ with open(mltfilepath, "r") as file:
     mltfilecontent = file.read()
 parsedmlt = ET.fromstring(mltfilecontent)
 outputfile = Path(parsedmlt[1].attrib["target"])
+outputformat = parsedmlt[1].attrib["f"]
 for i in parsedmlt.findall("consumer"):
     consumer = i
 frames = [int(consumer.attrib["in"]), int(consumer.attrib["out"])]
@@ -211,9 +225,28 @@ for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
 with open(filetemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", filetemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", "-map", "0:a:0", outputfile])
-
+mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", filetemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", filetemp.joinpath(f"video.{outputformat}"), "-y"])
 if mergecode == 0:
+    print("--------Merge completed--------")
+else:
+    input("Error occur when merging videos. Please check the error and press Enter to continue.")
+
+#-------------Rendering audio------------
+audiomlt = filetemp.joinpath("audio.mlt")
+subprocess.call(["cp", mltfilepath, audiomlt])
+audioonlymlt(audiomlt, filetemp)
+print("---------Rendering audio----------")
+audiocode = subprocess.call([args.melt_binary.expanduser(), audiomlt])
+if audiocode == 0:
+    print("-----Audio render completed----")
+else:
+    input("Error occured when rendering audio. Please check the error and press Enter to continue.")
+
+#--------------Merge audio and video------------
+print("----Merging audio and video----")
+finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
+
+if finalcode == 0:
     subprocess.call(["rm " + mltfilepath.parent.joinpath("client*.mlt").as_posix()], shell = True)
     #shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
