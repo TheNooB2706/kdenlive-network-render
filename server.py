@@ -51,11 +51,11 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
                 jobassigned.append(job)
                 lastdone = len(jobdone)
                 lasttime = time.time()
-                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done")
-                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
+            print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done")
+            print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
         elif "done" in received.decode():
-            print(f"\033[A{' '*getTermSize()[1]}\033[A")
-            print(f"\033[A{' '*getTermSize()[1]}\033[A")
             job = [received.decode().split(",")[1], received.decode().split(",")[2]]
             jobdone.append(job)
             job = givejobfunc(joblist, jobassigned)
@@ -70,8 +70,10 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
                 jobstr = f"{job[0]},{job[1]}".encode()
                 sockobject.send(jobstr)
                 jobassigned.append(job)
-                print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done|ETA={etaparsed}")
-                print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
+            print(f"\033[A{' '*getTermSize()[1]}\033[A")
+            print(f"{len(jobassigned)}/{len(joblist)} assigned|{len(jobdone)}/{len(joblist)} done|ETA={etaparsed}")
+            print(f"[{'='*(int(getTermSize()[1]*len(jobdone)/len(joblist))-2)}>")
         elif "failed" in received.decode():
             job = [received.decode().split(",")[1], received.decode().split(",")[2]]
             jobassigned.remove(job)
@@ -164,6 +166,7 @@ for i in clients:
     subprocess.call(["cp", mltfilepath, mltfilepath.parent.joinpath(f"client{clients.index(i)+1}.mlt")])
 print("-------------------------------")
 input("Press Enter to continue...")
+print("\n")
 
 timestart = time.time()
 
