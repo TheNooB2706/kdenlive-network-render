@@ -2,14 +2,17 @@ import socket, sys, subprocess, os, shutil, time, argparse, re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from threading import Thread, Lock
-
+#parsing argument
 parser = argparse.ArgumentParser()
 parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("mltfile", help = "Path to generated MLT project file.", type = Path)
 parser.add_argument("-f", "--frame-split", help = "Set the number of frames to split into for each jobs. Default to 1000 frames.", type = int, default = 1000)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
 args = parser.parse_args()
-
+if not args.melt_binary.exists():
+    parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")
+if not args.mltfile.exists():
+    parser.error(f"{args.mlt} does not exist! Please specify valid path to .mlt file.")
 #--------------Functions---------
 def segregate(inf, outf):
     itern = int((outf - inf)/framesplit)+1
@@ -119,12 +122,22 @@ def audioonlymlt(mltfilepath, filetemp):
 framesplit = args.frame_split
 port = args.port
 mltfilepath = args.mltfile.expanduser()
-filetemp = mltfilepath.parent.joinpath(".kdenlive_network_render")
+with open(mltfilepath, "r") as file:
+    mltfilecontent = file.read()
+parsedmlt = ET.fromstring(mltfilecontent)
+rootdir = Path(parsedmlt.attrib["root"])
+filetemp = rootdir.joinpath(".kdenlive_network_render")
+videofiletemp = filetemp.joinpath("videos")
 if not filetemp.exists():
     filetemp.mkdir()
 else:
     shutil.rmtree(filetemp)
     filetemp.mkdir()
+if not videofiletemp.exists():
+    videofiletemp.mkdir()
+else:
+    shutil.rmtree(videofiletemp)
+    videofiletemp.mkdir()
 
 s = socket.socket()
 s.bind(('', port))
@@ -138,12 +151,12 @@ try:
         client, addr = s.accept()
         print(f"client{len(clients)+1} from {addr} connected.")
         clients.append((client, addr))
-        client.send(f"{mltfilepath.name},{os.getlogin()},{mltfilepath.parent.as_posix()}".encode())
+        client.send(f"{mltfilepath.name},{os.getlogin()},{rootdir}".encode())
 except KeyboardInterrupt:
     print("\n-------------------------------")
     print("Stopped accepting connections. Initialising.")
     for i in clients:
-        print(f"Pinging client{clients.index(i)} ......")
+        print(f"Pinging client{clients.index(i)+1} ......")
         i[0].send(b"ping")
         try:
             i[0].settimeout(5)
@@ -163,16 +176,13 @@ print("Clients list: ")
 for i in clients:
     print(f"client{clients.index(i)+1} from {i[1]}")
     i[0].send(f"client{clients.index(i)+1}".encode())
-    subprocess.call(["cp", mltfilepath, mltfilepath.parent.joinpath(f"client{clients.index(i)+1}.mlt")])
+    subprocess.call(["cp", mltfilepath, filetemp.joinpath(f"client{clients.index(i)+1}.mlt")])
 print("-------------------------------")
 input("Press Enter to continue...")
 print("\n")
 
 timestart = time.time()
 
-with open(mltfilepath, "r") as file:
-    mltfilecontent = file.read()
-parsedmlt = ET.fromstring(mltfilecontent)
 outputfile = Path(parsedmlt[1].attrib["target"])
 outputformat = parsedmlt[1].attrib["f"]
 for i in parsedmlt.findall("consumer"):
@@ -200,7 +210,7 @@ for i in clients:
 print("Uploading...\n")
 
 while True:
-    received = os.listdir(filetemp)
+    received = os.listdir(videofiletemp)
     received = [i for i in received if i[0] != "."]
     uploaded = len(received)
     total = len(joblist)
@@ -221,14 +231,14 @@ for i in clients:
 
 print("\n---------Merging videos--------")
 #-------------Concatenate videos----------------
-videos = os.listdir(filetemp)
+videos = os.listdir(videofiletemp)
 videos.sort(key=alphaNumOrder)
 writecontent = ""
 for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
-with open(filetemp.joinpath("concat.txt"), "w") as file:
+with open(videofiletemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", filetemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", filetemp.joinpath(f"video.{outputformat}"), "-y"])
+mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", filetemp.joinpath(f"video.{outputformat}"), "-y"])
 if mergecode == 0:
     print("--------Merge completed--------")
 else:
@@ -250,7 +260,7 @@ print("----Merging audio and video----")
 finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
 
 if finalcode == 0:
-    subprocess.call(["rm " + mltfilepath.parent.joinpath("client*.mlt").as_posix()], shell = True)
+    subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
     #shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
 
