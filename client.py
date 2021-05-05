@@ -13,6 +13,7 @@ parser.add_argument("-ssh", "--ssh-command", help = "Custom ssh command. Use for
 parser.add_argument("-t", "--threads", help = "Value of threads option in the .mlt file. Default to number of cpu cores.", default = os.cpu_count(), type=int)
 parser.add_argument("-r", "--real-time", help = "The value of real_time option in the .mlt file. Default to -[number of cpu cores].", default = -(os.cpu_count()), type=int)
 parser.add_argument("-x", "--use-xvfb", help = "Use xvfb as fake x11 server. Useful on headless server.", action = "store_true")
+parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
 args = parser.parse_args()
 if not args.melt_binary.exists():
     parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")
@@ -160,3 +161,5 @@ print("Client job done! Exitting...")
 
 if notlocal:
     subprocess.call(["fusermount","-u",path])
+    if (not args.no_cleanup) and (not path.is_mount()):
+        shutil.rmtree(maindir)

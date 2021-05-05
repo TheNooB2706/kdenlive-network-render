@@ -8,6 +8,7 @@ parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("mltfile", help = "Path to generated MLT project file.", type = Path)
 parser.add_argument("-f", "--frame-split", help = "Set the number of frames to split into for each jobs. Default to 1000 frames.", type = int, default = 1000)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
+parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
 args = parser.parse_args()
 if not args.melt_binary.exists():
     parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")
@@ -260,8 +261,9 @@ print("----Merging audio and video----")
 finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
 
 if finalcode == 0:
-    subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
-    #shutil.rmtree(filetemp)
+    if not args.no_cleanup:
+        subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
+        shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
 
 print(f"Time elapsed: {format_seconds_to_hhmmss(time.time()-timestart)}")
