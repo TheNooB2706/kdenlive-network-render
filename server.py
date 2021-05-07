@@ -183,6 +183,8 @@ except KeyboardInterrupt:
             clients.remove(i)
 
 printb("-------------------------------")
+if len(clients) == 0:
+    sys.exit("No client connected! Exitting...")
 print(f"Total clients: {len(clients)}")
 print("Clients list: ")
 for i in clients:
