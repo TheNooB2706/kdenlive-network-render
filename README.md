@@ -11,7 +11,6 @@ A tool that lets you distribute your Kdenlive render to multiple computers. Curr
     - [Porting to Windows](#porting-to-windows)
     - [Adding new features or fixing bugs](#adding-new-features-or-fixing-bugs)
 - [License](#license)
-- [Footer](#footer)
 
 # Setup
 [(Back to top)](#table-of-contents)
