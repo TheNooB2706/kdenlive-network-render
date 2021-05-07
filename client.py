@@ -2,8 +2,10 @@ import socket, sys, subprocess, shutil, os, argparse
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
+#Version string
+__version__ = "1.0.0"
 #argument parsing
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
 parser.add_argument("address", help = "IP address of server", type=str)
 parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
@@ -14,6 +16,7 @@ parser.add_argument("-t", "--threads", help = "Value of threads option in the .m
 parser.add_argument("-r", "--real-time", help = "The value of real_time option in the .mlt file. Default to -[number of cpu cores].", default = -(os.cpu_count()), type=int)
 parser.add_argument("-x", "--use-xvfb", help = "Use xvfb as fake x11 server. Useful on headless server.", action = "store_true")
 parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
+parser.add_argument("--version", action="version", version=f"kdenlive-network-render {__version__}")
 args = parser.parse_args()
 if not args.melt_binary.exists():
     parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")

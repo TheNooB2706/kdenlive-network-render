@@ -2,13 +2,17 @@ import socket, sys, subprocess, os, shutil, time, argparse, re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from threading import Thread, Lock
+
+#Version string
+__version__ = "1.0.0"
 #parsing argument
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
 parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("mltfile", help = "Path to generated MLT project file.", type = Path)
 parser.add_argument("-f", "--frame-split", help = "Set the number of frames to split into for each jobs. Default to 1000 frames.", type = int, default = 1000)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
 parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
+parser.add_argument("--version", action="version", version=f"kdenlive-network-render {__version__}")
 args = parser.parse_args()
 if not args.melt_binary.exists():
     parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")
