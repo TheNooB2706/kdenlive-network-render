@@ -118,6 +118,14 @@ def audioonlymlt(mltfilepath, filetemp):
     savemlt = ET.tostring(parsedmlt, encoding="unicode")
     with open(mltfilepath, "w") as file:
         file.write(savemlt)
+
+def renderaudio():
+    audiomlt = filetemp.joinpath("audio.mlt")
+    subprocess.call(["cp", mltfilepath, audiomlt], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    audioonlymlt(audiomlt, filetemp)
+    audiocode = subprocess.call([args.melt_binary.expanduser(), audiomlt, "-quiet"])
+    if audiocode != 0:
+        input("Error occured when rendering audio. Please check the error and press Enter to continue.")
 #---------------------------
 #-------Variable and initialisation-----
 framesplit = args.frame_split
@@ -200,6 +208,10 @@ for i in clients:
     threads.append(t)
     t.start()
     
+audiothread = Thread(target = renderaudio)
+audiothread.start()
+audiothread.join()
+
 for i in threads:
     i.join()
 
@@ -246,6 +258,7 @@ else:
     input("Error occur when merging videos. Please check the error and press Enter to continue.")
 
 #-------------Rendering audio------------
+'''
 audiomlt = filetemp.joinpath("audio.mlt")
 subprocess.call(["cp", mltfilepath, audiomlt])
 audioonlymlt(audiomlt, filetemp)
@@ -255,7 +268,7 @@ if audiocode == 0:
     print("-----Audio render completed----")
 else:
     input("Error occured when rendering audio. Please check the error and press Enter to continue.")
-
+'''
 #--------------Merge audio and video------------
 print("----Merging audio and video----")
 finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
