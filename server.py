@@ -251,7 +251,7 @@ for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
 with open(videofiletemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-vcodec", "copy", "-map", "0:v", filetemp.joinpath(f"video.{outputformat}"), "-y"])
+mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
 if mergecode == 0:
     print("--------Merge completed--------")
 else:
@@ -268,12 +268,12 @@ if audiocode == 0:
     print("-----Audio render completed----")
 else:
     input("Error occured when rendering audio. Please check the error and press Enter to continue.")
-'''
+
 #--------------Merge audio and video------------
 print("----Merging audio and video----")
 finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
-
-if finalcode == 0:
+'''
+if mergecode == 0:
     if not args.no_cleanup:
         subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
         shutil.rmtree(filetemp)
