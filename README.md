@@ -41,29 +41,29 @@ For building from source, refer to [melt Github repository](https://github.com/m
 1. First, get [appimagetool](https://appimage.github.io/appimagetool/). This will be used to repackage the appimage.
 1. Get Kdenlive appimage from the [official download website](https://kdenlive.org/en/download/).
 1. Extract Kdenlive appimage. This will create a folder named "squashfs-root" in the current working directory.
-```
-./kdenlive-XXX.appimage --appimage-extract
-```
+    ```
+    ./kdenlive-XXX.appimage --appimage-extract
+    ```
 1. Modify the "AppRun" file in the "squashfs-root" directory.
 
- Change the last line from:
- ```
- kdenlive --config kdenlive-appimagerc $@
- ```
- to:
- ```
- melt $@
- ```
+    Change the last line from:
+     ```
+    kdenlive --config kdenlive-appimagerc $@
+    ```
+    to:
+    ```
+    melt $@
+    ```
 1. Delete the file `org.kde.kdenlive.appdata.xml` in `squashfs-root/usr/share/metainfo`. This file prevent appimage from being built (as it is being modified)
 1. (Optional) You can also remove unnecessary binaries or files unrelated to melt, but I skipped this because this could break the whole thing if wrong files are deleted. (And I have enough storage)
 1. Rebuild the appimage
-```
-./appimagetool-XXX.appimage squashfs-root melt.appimage
-```
- Or if you want compression (Command below use xz algorithm):
-```
-./appimagetool-XXX.appimage --comp xz squashfs-root melt.appimage
-```
+    ```
+    ./appimagetool-XXX.appimage squashfs-root melt.appimage
+    ```
+     Or if you want compression (Command below use xz algorithm):
+    ```
+    ./appimagetool-XXX.appimage --comp xz squashfs-root melt.appimage
+    ```
 1. Finally move the created appimage to any convenient place to your liking.
 
 #### Setting up ssh
@@ -137,7 +137,7 @@ Choose the name of the script to be generated and press `OK`:
 
 The .mlt file will be saved to `~/Videos/kdenlive-renderqueue`.
 
-## Usage
+## Example Usage
 It should be pretty clear that, `client.py` is the client program, while `server.py` is the server program. Server will be responsible to distribute job to client, while client will render the job given.
 
 Continue from the prerequisite above, now you want to render the project at `~/Videos/kdenlive-renderqueue/projectfile.mlt`, first start the server:
@@ -218,9 +218,9 @@ optional arguments:
 #### Detailed explanation:
 * `-f`, `--frame-split` [integer]  
  When distributing jobs, the server will segregates all the frames into chunks with number of frames `n` which can be set with this option. The default size of a job is 1000 frames. For example, you want to render a project with 1324 frames, with the default setting, this will be splitted into the following list of jobs:
- ```
- [0-999, 1000-1324]
- ```
+    ```
+    [0-999, 1000-1324]
+    ```
  where each job consists of 1000 frames except the last one.
  
 * `-b`, `--melt-binary` [path]  
