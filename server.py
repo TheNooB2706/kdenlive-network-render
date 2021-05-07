@@ -15,6 +15,9 @@ if not args.melt_binary.exists():
 if not args.mltfile.exists():
     parser.error(f"{args.mlt} does not exist! Please specify valid path to .mlt file.")
 #--------------Functions---------
+def printb(text):
+    print(f"\033[1m{text}\033[0m")
+
 def segregate(inf, outf):
     itern = int((outf - inf)/framesplit)+1
     joblist = []
@@ -155,14 +158,14 @@ s.listen()
 clients = []
 
 try:
-    print(f"Server listening on port {port}. Press Ctrl+C when all clients are connected.")
+    printb(f"Server listening on port {port}. Press Ctrl+C when all clients are connected.")
     while True:
         client, addr = s.accept()
         print(f"client{len(clients)+1} from {addr} connected.")
         clients.append((client, addr))
         client.send(f"{mltfilepath.name},{os.getlogin()},{rootdir}".encode())
 except KeyboardInterrupt:
-    print("\n-------------------------------")
+    printb("\n-------------------------------")
     print("Stopped accepting connections. Initialising.")
     for i in clients:
         print(f"Pinging client{clients.index(i)+1} ......")
@@ -179,14 +182,14 @@ except KeyboardInterrupt:
             print(f"client{clients.index(i)} timeout. Removing...")
             clients.remove(i)
 
-print("-------------------------------")
+printb("-------------------------------")
 print(f"Total clients: {len(clients)}")
 print("Clients list: ")
 for i in clients:
-    print(f"client{clients.index(i)+1} from {i[1]}")
+    print(f"  client{clients.index(i)+1} from {i[1]}")
     i[0].send(f"client{clients.index(i)+1}".encode())
     subprocess.call(["cp", mltfilepath, filetemp.joinpath(f"client{clients.index(i)+1}.mlt")])
-print("-------------------------------")
+printb("-------------------------------")
 input("Press Enter to continue...")
 print("\n")
 
@@ -242,8 +245,8 @@ for i in clients:
         print(f"Client from {i[1]} raised error when uploading")
         input("Press Enter to continue (after fixing the error manually of course)...")
 
-print("\n---------Merging videos--------")
 #-------------Concatenate videos----------------
+printb("\n---------Merging videos--------")
 videos = os.listdir(videofiletemp)
 videos.sort(key=alphaNumOrder)
 writecontent = ""
@@ -251,32 +254,14 @@ for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
 with open(videofiletemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
+mergecode = subprocess.call(["ffmpeg", "-hide_banner", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
 if mergecode == 0:
-    print("--------Merge completed--------")
-else:
-    input("Error occur when merging videos. Please check the error and press Enter to continue.")
-
-#-------------Rendering audio------------
-'''
-audiomlt = filetemp.joinpath("audio.mlt")
-subprocess.call(["cp", mltfilepath, audiomlt])
-audioonlymlt(audiomlt, filetemp)
-print("---------Rendering audio----------")
-audiocode = subprocess.call([args.melt_binary.expanduser(), audiomlt])
-if audiocode == 0:
-    print("-----Audio render completed----")
-else:
-    input("Error occured when rendering audio. Please check the error and press Enter to continue.")
-
-#--------------Merge audio and video------------
-print("----Merging audio and video----")
-finalcode = subprocess.call(["ffmpeg", "-i", filetemp.joinpath(f"video.{outputformat}"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
-'''
-if mergecode == 0:
+    printb("--------Merge completed--------")
     if not args.no_cleanup:
         subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
         shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
+else:
+    input("Error occur when merging videos. Please check the error and press Enter to continue.")
 
 print(f"Time elapsed: {format_seconds_to_hhmmss(time.time()-timestart)}")
