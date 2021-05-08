@@ -8,7 +8,7 @@ __version__ = "1.0.0"
 parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
 parser.add_argument("address", help = "IP address of server", type=str)
 parser.add_argument("port", help = "Port of the server", type=int)
-parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /bin/melt", default = "/bin/melt", type = Path)
+parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /usr/bin/melt", default = "/usr/bin/melt", type = Path)
 parser.add_argument("-d", "--program-dir", help = "Path where this program use to store temporary files and mountpoint. Default to ~/.kdenlive_network_render", default = "~/.kdenlive_network_render", type = Path)
 parser.add_argument("-l", "--local", help = "Start as local client where client and server are on the same machine.", action = "store_true")
 parser.add_argument("-ssh", "--ssh-command", help = "Custom ssh command. Use for custom private key or ssh port etc.", type = str)
@@ -145,6 +145,7 @@ while True:
             jobreceived.remove(jobinout)
             print(f"Job {jobinout} failed!")
             input("Press Enter to continue (after checking the error manually)...")
+            s.send(b"standby")
     else:
         break
 
