@@ -147,13 +147,12 @@ videofiletemp = filetemp.joinpath("videos")
 if not filetemp.exists():
     filetemp.mkdir()
 else:
+    if any(filetemp.iterdir()):
+        if input(f"Temporary directory {filetemp} not empty. Delete? [y/n]: ") != "y":
+            sys.exit(f"Temporary directory {tempfolder} not empty.")
     shutil.rmtree(filetemp)
     filetemp.mkdir()
-if not videofiletemp.exists():
-    videofiletemp.mkdir()
-else:
-    shutil.rmtree(videofiletemp)
-    videofiletemp.mkdir()
+videofiletemp.mkdir()
 
 s = socket.socket()
 s.bind(('', port))
