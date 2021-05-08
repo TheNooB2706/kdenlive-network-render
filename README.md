@@ -292,7 +292,11 @@ optional arguments:
 # Development
 [(Back to top)](#table-of-contents)
 
-Under construction
+### Simplified process of what this program is doing  
+![](../assets/process.png?raw=true)
+
+### Socket communication between server and client  
+![](../assets/comm.png?raw=true)
 
 # Contribute
 [(Back to top)](#table-of-contents)
