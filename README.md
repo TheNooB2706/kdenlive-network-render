@@ -211,7 +211,7 @@ optional arguments:
                         Set the number of frames to split into for each jobs.
                         Default to 1000 frames.
   -b MELT_BINARY, --melt-binary MELT_BINARY
-                        Path to the melt binary. Default to /bin/melt
+                        Path to the melt binary. Default to /usr/bin/melt
   --no-cleanup          If this option is set, the temporary files and folders
                         created will not be deleted at exit.
 ```
@@ -244,7 +244,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -b MELT_BINARY, --melt-binary MELT_BINARY
-                        Path to the melt binary. Default to /bin/melt
+                        Path to the melt binary. Default to /usr/bin/melt
   -d PROGRAM_DIR, --program-dir PROGRAM_DIR
                         Path where this program use to store temporary files
                         and mountpoint. Default to ~/.kdenlive_network_render
