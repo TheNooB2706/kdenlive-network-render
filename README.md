@@ -137,6 +137,36 @@ Choose the name of the script to be generated and press `OK`:
 
 The .mlt file will be saved to `~/Videos/kdenlive-renderqueue`.
 
+### Getting subtitle to work
+If you use any subtitle in your process, you won't be able to render directly with the generated .mlt file. This is because by default the subtitle file is pointed toward the one in temporary folder.
+
+Let's say you have the project `project.kdenlive` that uses subtitle feature, there will be a subtitle file with the same name as the project file name but appended with `.srt` extension:
+```
+projectroot/
+    project.kdenlive
+    project.kdenlive.srt #The subtitle file generated
+    ....
+```
+What you have to do now is open the .mlt file generated, search for the word `.srt` and change the subtitle file to the one generated at the root directory:
+```
+#Change this:
+...
+  <filter id="filterXX">
+   <property name="mlt_service">avfilter.subtitles</property>
+   <property name="internal_added">XXX</property>
+   <property name="av.filename">/tmp/XXXXXXXXX.srt</property>
+  </filter>
+...
+#to this:
+...
+  <filter id="filterXX">
+   <property name="mlt_service">avfilter.subtitles</property>
+   <property name="internal_added">XXX</property>
+   <property name="av.filename">project.kdenlive.srt</property>
+  </filter>
+...
+```
+
 ## Example Usage
 It should be pretty clear that, `client.py` is the client program, while `server.py` is the server program. Server will be responsible to distribute job to client, while client will render the job given.
 
