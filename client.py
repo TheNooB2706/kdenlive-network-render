@@ -87,6 +87,9 @@ if notlocal:
     if not tempfolder.exists():
         tempfolder.mkdir()
     else:
+        if any(tempfolder.iterdir()):
+            if input(f"Temporary directory {tempfolder} not empty. Delete? [y/n]: ") != "y":
+                sys.exit(f"Temporary directory {tempfolder} not empty.")
         shutil.rmtree(tempfolder)
         tempfolder.mkdir()
     if not path.exists():
