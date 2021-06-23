@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 __version__ = "1.0.1"
 #argument parsing
 parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
-parser.add_argument("address", help = "IP address of server", type=str)
+parser.add_argument("address", nargs="?", help = "IP address of server", default="127.0.0.1", type=str)
 parser.add_argument("port", help = "Port of the server", type=int)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /usr/bin/melt", default = "/usr/bin/melt", type = Path)
 parser.add_argument("-d", "--program-dir", help = "Path where this program use to store temporary files and mountpoint. Default to ~/.kdenlive_network_render", default = "~/.kdenlive_network_render", type = Path)
@@ -20,6 +20,9 @@ parser.add_argument("--version", action="version", version=f"kdenlive-network-re
 args = parser.parse_args()
 if not args.melt_binary.exists():
     parser.error(f"{args.melt_binary} does not exist! Please specify valid path to MLT binary.")
+if not args.local: #If local not set
+    if args.address == "127.0.0.1": #and the address is not given
+        parser.error("the following arguments are required: address") #raise error (if client is local then the address is set automatically)
 
 #------------Functions---------
 def modifymlt(mltfilepath, inf, outf):
