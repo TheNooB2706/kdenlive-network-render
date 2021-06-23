@@ -22,6 +22,28 @@ if not args.mltfile.exists():
 def printb(text):
     print(f"\033[1m{text}\033[0m")
 
+def get_ip():
+    import socket
+    import fcntl
+    import struct
+    
+    def ip_from_if(ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', ifname[:15].encode('utf-8')))[20:24])
+
+    ip = ""
+    interface = [i[1] for i in socket.if_nameindex() if i[1] != "lo"] #get all interfaces except loopback
+    for i in interface:
+        try:
+            address = ip_from_if(i)
+            ip += f"{i}: {address} | "
+        except OSError:
+            continue
+    return ip.strip(" | ")
+
 def segregate(inf, outf):
     itern = int((outf - inf)/framesplit)+1
     joblist = []
@@ -162,6 +184,7 @@ clients = []
 
 try:
     printb(f"Server listening on port {port}. Press Ctrl+C when all clients are connected.")
+    print(get_ip())
     while True:
         client, addr = s.accept()
         print(f"client{len(clients)+1} from {addr} connected.")
