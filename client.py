@@ -54,9 +54,9 @@ def getfileformat(mltfilepath):
 def renderfunc(meltbin, mltfile):
     print("-------------------------------")
     if args.use_xvfb:
-        code = subprocess.call(["xvfb-run", "-a", meltbin, mltfile])
+        code = subprocess.run(["xvfb-run", "-a", meltbin, mltfile]).returncode
     else:
-        code = subprocess.call([meltbin, mltfile])
+        code = subprocess.run([meltbin, mltfile]).returncode
     print("-------------------------------")
     return code
 
@@ -67,9 +67,9 @@ def constructfilename(inf, outf, fileformat):
 def doupload():
     print("-------------------------------")
     if args.ssh_command:
-        code = subprocess.call(["rsync", "-aP", "-e", args.ssh_command, f"{tempfolder}{os.sep}", f"{serverusername}@{addr}:{mountdir}{os.sep}.kdenlive_network_render{os.sep}videos"])
+        code = subprocess.run(["rsync", "-aP", "-e", args.ssh_command, f"{tempfolder}{os.sep}", f"{serverusername}@{addr}:{mountdir}{os.sep}.kdenlive_network_render{os.sep}videos"]).returncode
     else:
-        code = subprocess.call(["rsync", "-aP", f"{tempfolder}{os.sep}", f"{serverusername}@{addr}:{mountdir}{os.sep}.kdenlive_network_render{os.sep}videos"])
+        code = subprocess.run(["rsync", "-aP", f"{tempfolder}{os.sep}", f"{serverusername}@{addr}:{mountdir}{os.sep}.kdenlive_network_render{os.sep}videos"]).returncode
     print("-------------------------------")
     return code
 
@@ -85,7 +85,7 @@ notlocal = not(args.local)
 
 if path.is_mount() and notlocal:
     print("--------Unmounting previously mounted dir-------")
-    if subprocess.call(["fusermount","-u",path]) == 0:
+    if subprocess.run(["fusermount","-u",path]).returncode == 0:
         print("Done")
     print("------------------------------------------------")
 
@@ -124,9 +124,9 @@ if not notlocal:
     path = mountdir
 if notlocal:
     if args.ssh_command:
-        subprocess.call(["sshfs", "-o", f"ssh_command={args.ssh_command}", f"{serverusername}@{addr}:{mountdir}", path])
+        subprocess.run(["sshfs", "-o", f"ssh_command={args.ssh_command}", f"{serverusername}@{addr}:{mountdir}", path])
     else:
-        subprocess.call(["sshfs",f"{serverusername}@{addr}:{mountdir}", path]) #mounting sshfs
+        subprocess.run(["sshfs",f"{serverusername}@{addr}:{mountdir}", path]) #mounting sshfs
 #------------------------------------
 #---------Actually starting communication--------
 ping = s.recv(128)
@@ -152,7 +152,7 @@ while True:
             sendstr = f"failed,{jobinout[0]},{jobinout[1]}".encode()
             s.send(sendstr)
             fileformat = getfileformat(path.joinpath(f".kdenlive_network_render/{clientid}.mlt"))
-            subprocess.call(["rm",tempfolder.joinpath(constructfilename(jobinout[0], jobinout[1], fileformat))])
+            subprocess.run(["rm",tempfolder.joinpath(constructfilename(jobinout[0], jobinout[1], fileformat))])
             jobreceived.remove(jobinout)
             print(f"Job {jobinout} failed!")
             input("Press Enter to continue (after checking the error manually)...")
@@ -175,6 +175,6 @@ if not notlocal:
 print("Client job done! Exitting...")
 
 if notlocal:
-    subprocess.call(["fusermount","-u",path])
+    subprocess.run(["fusermount","-u",path])
     if (not args.no_cleanup) and (not path.is_mount()):
         shutil.rmtree(maindir)

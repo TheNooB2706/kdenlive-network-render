@@ -155,9 +155,9 @@ def audioonlymlt(mltfilepath, filetemp):
 
 def renderaudio():
     audiomlt = filetemp.joinpath("audio.mlt")
-    subprocess.call(["cp", mltfilepath, audiomlt], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    subprocess.run(["cp", mltfilepath, audiomlt], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     audioonlymlt(audiomlt, filetemp)
-    audiocode = subprocess.call([args.melt_binary.expanduser(), audiomlt, "-quiet"])
+    audiocode = subprocess.run([args.melt_binary.expanduser(), audiomlt, "-quiet"]).returncode
     if audiocode != 0:
         input("Error occured when rendering audio. Please check the error and press Enter to continue.")
 #---------------------------
@@ -221,7 +221,7 @@ print("Clients list: ")
 for i in clients:
     print(f"  client{clients.index(i)+1} from {i[1]}")
     i[0].send(f"client{clients.index(i)+1}".encode())
-    subprocess.call(["cp", mltfilepath, filetemp.joinpath(f"client{clients.index(i)+1}.mlt")])
+    subprocess.run(["cp", mltfilepath, filetemp.joinpath(f"client{clients.index(i)+1}.mlt")])
 printb("-------------------------------")
 input("Press Enter to continue...")
 print("\n")
@@ -287,11 +287,11 @@ for i in videos:
     writecontent = writecontent + f"file '{i}'\n"
 with open(videofiletemp.joinpath("concat.txt"), "w") as file:
     file.write(writecontent)
-mergecode = subprocess.call(["ffmpeg", "-hide_banner", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile])
+mergecode = subprocess.run(["ffmpeg", "-hide_banner", "-f", "concat", "-i", videofiletemp.joinpath("concat.txt"), "-i", filetemp.joinpath(f"audio.{outputformat}"), "-c:v", "copy", "-c:a", "copy", outputfile]).returncode
 if mergecode == 0:
     printb("--------Merge completed--------")
     if not args.no_cleanup:
-        subprocess.call(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
+        subprocess.run(["rm " + filetemp.joinpath("client*.mlt").as_posix()], shell = True)
         shutil.rmtree(filetemp)
     print(f"File saved to {outputfile}.")
 else:
