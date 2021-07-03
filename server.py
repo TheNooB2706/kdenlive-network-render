@@ -12,6 +12,7 @@ parser.add_argument("mltfile", help = "Path to generated MLT project file.", typ
 parser.add_argument("-f", "--frame-split", help = "Set the number of frames to split into for each jobs. Default to 1000 frames.", type = int, default = 1000)
 parser.add_argument("-b", "--melt-binary", help = "Path to the melt binary. Default to /usr/bin/melt", default = "/usr/bin/melt", type = Path)
 parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
+parser.add_argument("--verbose", "-v", help = "Enable verbose mode.", action = "store_true")
 parser.add_argument("--version", action="version", version=f"kdenlive-network-render {__version__}")
 args = parser.parse_args()
 if not args.melt_binary.exists():
@@ -19,6 +20,10 @@ if not args.melt_binary.exists():
 if not args.mltfile.exists():
     parser.error(f"{args.mlt} does not exist! Please specify valid path to .mlt file.")
 #--------------Functions---------
+def print_verbose(text):
+    if args.verbose:
+        print(text)
+
 def printb(text):
     print(f"\033[1m{text}\033[0m")
 
@@ -194,18 +199,18 @@ except KeyboardInterrupt:
     printb("\n-------------------------------")
     print("Stopped accepting connections. Initialising.")
     for i in clients:
-        print(f"Pinging client{clients.index(i)+1} ......")
+        print_verbose(f"Pinging client{clients.index(i)+1} ......")
         i[0].send(b"ping")
         try:
             i[0].settimeout(5)
             response = i[0].recv(128)
             if response.decode() == "ready":
-                print(f"client{clients.index(i)+1} ready.")
+                print_verbose(f"client{clients.index(i)+1} ready.")
             else:
-                print(f"client{clients.index(i)+1} not recognised. Removing...")
+                print_verbose(f"client{clients.index(i)+1} not recognised. Removing...")
                 clients.remove(i)
         except socket.timeout:
-            print(f"client{clients.index(i)} timeout. Removing...")
+            print_verbose(f"client{clients.index(i)} timeout. Removing...")
             clients.remove(i)
 
 printb("-------------------------------")
@@ -267,7 +272,7 @@ while True:
 for i in clients:
     status = i[0].recv(512).decode()
     if status == "done upload":
-        print(f"Client from {i[1]} finished uploading.")
+        print_verbose(f"Client from {i[1]} finished uploading.")
         continue
     else:
         print(f"Client from {i[1]} raised error when uploading")

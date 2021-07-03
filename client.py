@@ -16,6 +16,7 @@ parser.add_argument("-t", "--threads", help = "Value of threads option in the .m
 parser.add_argument("-r", "--real-time", help = "The value of real_time option in the .mlt file. Default to -[number of cpu cores].", default = -(os.cpu_count()), type=int)
 parser.add_argument("-x", "--use-xvfb", help = "Use xvfb as fake x11 server. Useful on headless server.", action = "store_true")
 parser.add_argument("--no-cleanup", help = "If this option is set, the temporary files and folders created will not be deleted at exit.", action = "store_true")
+parser.add_argument("--verbose", "-v", help = "Enable verbose mode.", action = "store_true")
 parser.add_argument("--version", action="version", version=f"kdenlive-network-render {__version__}")
 args = parser.parse_args()
 if not args.melt_binary.exists():
@@ -71,6 +72,10 @@ def doupload():
         code = subprocess.call(["rsync", "-aP", f"{tempfolder}{os.sep}", f"{serverusername}@{addr}:{mountdir}{os.sep}.kdenlive_network_render{os.sep}videos"])
     print("-------------------------------")
     return code
+
+def print_verbose(text):
+    if args.verbose:
+        print(text)
 #-------------------------------------
 #----------variable and initialisation--------
 maindir = args.program_dir.expanduser()
