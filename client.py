@@ -52,12 +52,16 @@ def getfileformat(mltfilepath):
     return fileformat
 
 def renderfunc(meltbin, mltfile):
-    print("-------------------------------")
-    if args.use_xvfb:
-        code = subprocess.run(["xvfb-run", "-a", meltbin, mltfile]).returncode
+    print_verbose("-------------------------------")
+    if args.verbose:
+        output = None
     else:
-        code = subprocess.run([meltbin, mltfile]).returncode
-    print("-------------------------------")
+        output = subprocess.DEVNULL
+    if args.use_xvfb:
+        code = subprocess.run(["xvfb-run", "-a", meltbin, mltfile], stdout=output).returncode
+    else:
+        code = subprocess.run([meltbin, mltfile], stdout=output).returncode
+    print_verbose("-------------------------------")
     return code
 
 def constructfilename(inf, outf, fileformat):
@@ -84,10 +88,12 @@ path = maindir.joinpath("mount")
 notlocal = not(args.local)
 
 if path.is_mount() and notlocal:
-    print("--------Unmounting previously mounted dir-------")
+    print_verbose("--------Unmounting previously mounted dir-------")
     if subprocess.run(["fusermount","-u",path]).returncode == 0:
-        print("Done")
-    print("------------------------------------------------")
+        print_verbose("Done")
+    else:
+        sys.exit(f"Failed to unmount mountpoint {path}.")
+    print_verbose("------------------------------------------------")
 
 if notlocal:
     if not maindir.exists():
@@ -103,12 +109,8 @@ if notlocal:
     if not path.exists():
         path.mkdir()
     else:
-        if not path.is_mount():
-            shutil.rmtree(path)
-            path.mkdir()
-        else:
-            print(f"Mountpoint {path} is mounted. Please unmount before continue.")
-            sys.exit(1)
+        shutil.rmtree(path)
+        path.mkdir()
 
 mltbinary = args.melt_binary.expanduser()
 addr = args.address
@@ -144,8 +146,10 @@ while True:
         jobinout = jobinout.split(",")
         jobreceived.append(jobinout)
         modifymlt(path.joinpath(f".kdenlive_network_render/{clientid}.mlt"), jobinout[0], jobinout[1])
+        print(f"Rendering job {jobinout[0]}-{jobinout[1]}...")
         executioncode = renderfunc(mltbinary, path.joinpath(f".kdenlive_network_render/{clientid}.mlt"))
         if executioncode == 0:
+            print(f"Done rendering job {jobinout[0]}-{jobinout[1]}.")
             sendstr = f"done,{jobinout[0]},{jobinout[1]}".encode()
             s.send(sendstr)
         else:
