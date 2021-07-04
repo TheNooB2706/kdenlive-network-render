@@ -53,14 +53,15 @@ def getfileformat(mltfilepath):
 
 def renderfunc(meltbin, mltfile):
     print_verbose("-------------------------------")
-    if args.verbose:
-        output = None
-    else:
-        output = subprocess.DEVNULL
+    command = [meltbin, mltfile]
+    if not args.verbose:
+        command.append("-quiet")
     if args.use_xvfb:
-        code = subprocess.run(["xvfb-run", "-a", meltbin, mltfile], stdout=output).returncode
+        command.insert(0, "-a")
+        command.insert(0, "xvfb-run")
+        code = subprocess.run(command).returncode
     else:
-        code = subprocess.run([meltbin, mltfile], stdout=output).returncode
+        code = subprocess.run(command).returncode
     print_verbose("-------------------------------")
     return code
 
