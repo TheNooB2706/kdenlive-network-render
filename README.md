@@ -181,19 +181,23 @@ If you are using the appimage modification method to get melt, chances are it wi
 ```
 python3 server.py -b ~/path/to/melt/melt.appimage 12345 ~/Videos/kdenlive-renderqueue/projectfile.mlt
 ```
-
+At the output of the server program, you will see the IP address of the current computer for all network interfaces:
+```
+Server listening on port 12345. Press Ctrl+C when all clients are connected.
+wlan0: 192.168.1.23
+```
 Then on the client side:
 ```
 python3 client.py 192.168.1.23 12345
 ```
-Where `192.168.1.23` is the IP address of the server (can be found using `ip a`) and `12345` is the port when you start the server.
+Where `192.168.1.23` is the IP address of the server and `12345` is the port when you start the server.
 
 Similarly, if you used the appimage modification method, the path to melt binary can be specified with the same option:
 ```
 python3 client.py -b ~/path/to/melt/melt.appimage 192.168.1.23 12345
 ```
 
-According to a [video](https://www.youtube.com/watch?v=I6HlcopF2rM) by [Mark Furneaux 2](https://www.youtube.com/channel/UCN3Dgu6CVBcecDkc5DmIIqw) (and also my personal experience when rendering on a really old hardware), parallel processing sometimes does not operate correctly. This is control by the `real_time` option in the .mlt file ([melt documentation](https://www.mltframework.org/faq/#does-mlt-take-advantage-of-multiple-cores-or-how-do-i-enable-parallel-processing)). In this case, you might want to set the value to `-1` (which means no parallel processing and no frame drop) with the option `-r` at client side:
+According to a [video](https://www.youtube.com/watch?v=I6HlcopF2rM) by [Mark Furneaux 2](https://www.youtube.com/channel/UCN3Dgu6CVBcecDkc5DmIIqw) (~~and also my personal experience when rendering on a really old hardware~~ whoops it turns out to be placebo effect, but who knows if this will happen to you), parallel processing sometimes does not operate correctly. This is control by the `real_time` option in the .mlt file ([melt documentation](https://www.mltframework.org/faq/#does-mlt-take-advantage-of-multiple-cores-or-how-do-i-enable-parallel-processing)). In this case, you might want to set the value to `-1` (which means no parallel processing and no frame drop) with the option `-r` at client side:
 
 ```
 python3 client.py -b ~/path/to/melt/melt.appimage -r "-1" 192.168.1.23 12345
@@ -201,18 +205,18 @@ python3 client.py -b ~/path/to/melt/melt.appimage -r "-1" 192.168.1.23 12345
 
 If you also want to use the same computer that host the server to render, you can start the client as local mode with the option `-l`:
 ```
-python3 client.py -b ~/path/to/melt/melt.appimage -l 192.168.1.23 12345
+python3 client.py -b ~/path/to/melt/melt.appimage -l 12345
 ```
+Notice how you don't need to enter the IP address when running local mode.
 
 Repeat this for as many clients as you want. After all the clients are connected, press `CTRL+C` on server side:
 ```
 Server listening on port 12345. Press Ctrl+C when all clients are connected.
+wlan0: 192.168.1.23
 client1 from ('127.0.0.1', 41176) connected.
 ^C
 -------------------------------
 Stopped accepting connections. Initialising.
-Pinging client1 ......
-client1 ready.
 -------------------------------
 Total clients: 1
 Clients list: 
@@ -229,6 +233,7 @@ For more options' help, refer to the documentation below.
 #### Program help:
 ```
 usage: server.py [-h] [-f FRAME_SPLIT] [-b MELT_BINARY] [--no-cleanup]
+                 [--verbose] [--version]
                  port mltfile
 
 positional arguments:
@@ -244,6 +249,8 @@ optional arguments:
                         Path to the melt binary. Default to /usr/bin/melt
   --no-cleanup          If this option is set, the temporary files and folders
                         created will not be deleted at exit.
+  --verbose, -v         Enable verbose mode.
+  --version             show program's version number and exit
 ```
 #### Detailed explanation:
 * `-f`, `--frame-split` [integer]  
@@ -258,14 +265,20 @@ optional arguments:
  
 * `--no-cleanup`  
  You probably will not want to use this option, but if you do, this will skip the deletion of temporary files created at `rootdir/.kdenlive_network_render`
+ 
+* `-v`, `--verbose`  
+ Enable verbose mode. I think you know what this is, basically printing extra info.
+ 
+* `--version`  
+ Check version number with this.
 
 ### client
 #### Program help:
 ```
 usage: client.py [-h] [-b MELT_BINARY] [-d PROGRAM_DIR] [-l]
                  [-ssh SSH_COMMAND] [-t THREADS] [-r REAL_TIME] [-x]
-                 [--no-cleanup]
-                 address port
+                 [--no-cleanup] [--verbose] [--version]
+                 [address] port
 
 positional arguments:
   address               IP address of server
@@ -293,6 +306,8 @@ optional arguments:
                         server.
   --no-cleanup          If this option is set, the temporary files and folders
                         created will not be deleted at exit.
+  --verbose, -v         Enable verbose mode.
+  --version             show program's version number and exit
 ```
 #### Detailed explanation:
 * `-b`, `--melt-binary` [path]  
@@ -318,6 +333,12 @@ optional arguments:
  
 * `--no-cleanup`  
  Same as server, if this is set, temporary file (at `--program-dir`) will not be deleted on exit.
+ 
+* `-v`, `--verbose`  
+ Enable verbose mode. I think you know what this is, basically printing extra info.
+ 
+* `--version`  
+ Check version number with this.
  
 # Development
 [(Back to top)](#table-of-contents)
