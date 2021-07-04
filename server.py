@@ -119,6 +119,7 @@ def threadfunc(sockobject, givejobfunc, joblist, jobassigned, jobdone, lock, cli
         lock.release()
     if not failed:
         sockobject.send(b"job done")
+        time.sleep(1)
 
 def getTermSize():
     rows, columns = os.popen("stty size","r").read().split()
