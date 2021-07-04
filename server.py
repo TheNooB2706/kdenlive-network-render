@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from threading import Thread, Lock
 
 #Version string
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 #parsing argument
 parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
 parser.add_argument("port", help = "Port of the server", type=int)

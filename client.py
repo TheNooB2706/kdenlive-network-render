@@ -3,7 +3,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 #Version string
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 #argument parsing
 parser = argparse.ArgumentParser(epilog="GitHub project page: https://github.com/TheNooB2706/kdenlive-network-render")
 parser.add_argument("address", nargs="?", help = "IP address of server", default="127.0.0.1", type=str)
