@@ -177,7 +177,7 @@ if not filetemp.exists():
 else:
     if any(filetemp.iterdir()):
         if input(f"Temporary directory {filetemp} not empty. Delete? [y/n]: ") != "y":
-            sys.exit(f"Temporary directory {tempfolder} not empty.")
+            sys.exit(f"Temporary directory {filetemp} not empty.")
     shutil.rmtree(filetemp)
     filetemp.mkdir()
 videofiletemp.mkdir()
